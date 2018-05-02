@@ -7,6 +7,8 @@ JAVA并发
 
 目录
 
+![JAVA并发](../img/java_thread/JAVA并发.jpg)
+
 (1)基础概念
 
 (2)线程
@@ -29,6 +31,8 @@ JAVA并发
 
 (一).基础概念
 
+![基础概念](../img/java_thread/基础概念.jpg)
+
 1.可见性和原子性
 
 - 可见性：一个线程修改了共享变量的值，另一个线程可以读到这个修改的值。
@@ -42,6 +46,8 @@ JAVA并发
 - 使用缓存锁保证原子性。
 
 2.原子操作的三种实现：
+
+![原子操作的实现](../img/java_thread/原子操作的实现.jpg)
 
 (1).CAS(Compare And Swap 比较与交换)
 
@@ -68,6 +74,8 @@ JAVA并发
    AutomicLong(用原子方式更新的long值)。
 
 3.同步原语
+
+![同步原语](../img/java_thread/同步原语.jpg)
 
 (1).volatile
 
@@ -190,13 +198,14 @@ public class DoubleCheckedLocking {
 }
 
 ```
-
-线程A-A1：分配对象的内存空间。
-线程A-A3：设置instance指向内存空间。
-线程B-B1：判断instance是否为空。
-线程B-B2：由于instance不为null，线程B将访问instance引用的对象。
-线程A-A3：初始化对象
-线程A-A4：访问instance引用的对象。
+|  线程A                    |   线程B   |
+| :----------------------  | :------- |
+|A1：分配对象的内存空间       |           |
+|A2：设置instance指向内存空间 |           |
+|                           |B1：判断instance是否为空 |
+|                           |B2：由于instance不为null，线程B将访问instance引用的对象 |
+|A3：初始化对象               |            |
+|A4：访问instance引用的对象    |         |
 
 存在的问题：
 A2和A3重排序，线程B访问到一个还没初始化的对象。
@@ -230,12 +239,15 @@ public class InstanceFactory {
 
 (二).线程
 
+![线程](../img/java_thread/线程.jpg)
 
 1.什么是线程？
 
 现代操作系统在运行一个程序时，会为其创建一个进程。现代操作系统调度的最小单元是线程，也叫轻量级进程。在一个进程里可以创建多个线程，这些线程都拥有各自的计数器，堆栈和局部变量等属性。
 
 2.创建线程的三种方式
+
+![创建线程的三种方式](../img/java_thread/创建线程的三种方式.jpg)
 
 (1).Thread
 
@@ -354,6 +366,8 @@ ThreadLocal，即线程变量，是一个以ThreadLocal对象为键，任意对�
 
 7.线程的终止、中断
 
+![线程的终止、中断](../img/java_thread/线程的终止、中断.jpg)
+
 (1).Thread.interrupt:中断线程
 
 - 除非线程正在进行中断它自身，否则都会接受这个方法的中断。会调用Thread.checkAccess()，可能会抛出SecurityException。
@@ -373,6 +387,8 @@ ThreadLocal，即线程变量，是一个以ThreadLocal对象为键，任意对�
 ****
 
 (三).锁
+
+![锁](../img/java_thread/锁.jpg)
 
 锁是Java并发编程中最重要的同步机制。锁除了让临界区互斥执行外，还可以让释放锁的线程向获取同一个锁的线程发送消息。
 
@@ -454,7 +470,9 @@ Condition的实现：等待队列，等待和通知。
 
 7.避免活跃性危险
 
-(1).死锁
+![避免活跃性危险](../img/java_thread/避免活跃性危险.jpg)
+
+a.死锁
 
 - 哲学家用餐问题：每个线程都拥有别的线程需要的资源，同时又等待别人拥有的资源，在获得别的资源之前不会释放自己手上的资源。
 
@@ -463,7 +481,7 @@ Condition的实现：等待队列，等待和通知。
 - 锁顺序死锁：线程A,B都需要锁1,2。线程A先获得锁1 ,再请求锁2 ，线程B先获得锁2，再请求锁1 。
 
 
-8.死锁的避免与诊断
+b.死锁的避免与诊断
 
 (1).内置锁：只要没有获得锁，就会一直等待下去。
 
@@ -482,7 +500,7 @@ Condition的实现：等待队列，等待和通知。
 - 对于数据库锁，加锁和解锁必须在一个数据库连接里，否则会出现解锁失败的情况。
 
 
-9.饥饿，糟糕的响应性，活锁
+c.饥饿，糟糕的响应性，活锁
 
 - 饥饿：线程由于无法访问它需要的资源而不能继续执行，引发饥饿最常见的资源是CPU时钟周期。
 
@@ -496,6 +514,8 @@ Condition的实现：等待队列，等待和通知。
 ****
 
 (四).同步器
+
+![同步器](../img/java_thread/同步器.jpg)
 
 (1).实现
 
@@ -523,6 +543,8 @@ Condition的实现：等待队列，等待和通知。
 
 (五).并发容器和框架
 
+![并发容器和框架](../img/java_thread/并发容器和框架.jpg)
+
 (1).ConcurrentHashMap
 
 与HashMap,HashTable对比：
@@ -540,6 +562,8 @@ ConCurrentHashMap的结构：ConCurrentHashMap是由Segment数组结构和HashEn
 ConcurrentLinkedQueue由head节点和tail节点组成，每个节点(Node)由节点元素(item)和指向下一个节点(next)的引用组成，从而组成一张链表结构的队列。
 
 (3).阻塞队列
+
+![阻塞队列](../img/java_thread/阻塞队列.jpg)
 
 - 插入：当队列满时，队列会堵塞插入元素的线程，直到队列不满。
 
@@ -603,6 +627,8 @@ ConcurrentLinkedQueue由head节点和tail节点组成，每个节点(Node)由节
 
 (六).Java并发工具类
 
+![Java并发工具类](../img/java_thread/Java并发工具类.jpg)
+
 1.CyclicBarrier
 
 一组线程在到达一个屏障（同步点）前被堵塞，直到最后一个线程到达屏障时，屏障才会放行，这组线程才能继续执行。
@@ -631,7 +657,11 @@ Exchanger是一个用于线程间协作的工具类。Exchanger用于进行线�
 
 (七).原子操作类
 
+![原子操作类](../img/java_thread/原子操作类.jpg)
+
 1.原子更新基本类型类
+
+![原子更新基本类型类](../img/java_thread/原子更新基本类型类.jpg)
 
 - AtomicBoolean
 
@@ -641,6 +671,8 @@ Exchanger是一个用于线程间协作的工具类。Exchanger用于进行线�
 
 2.原子更新数组
 
+![原子更新数组](../img/java_thread/原子更新数组.jpg)
+
 - AtomicIntegerArray
 
 - AtomicLongArray
@@ -649,6 +681,8 @@ Exchanger是一个用于线程间协作的工具类。Exchanger用于进行线�
 
 3.原子更新引用类型
 
+![原子更新引用类型](../img/java_thread/原子更新引用类型.jpg)
+
 - AtomicReference
 
 - AtomicReferenceFieldUpdater 原子更新引用类型里的字段
@@ -656,6 +690,8 @@ Exchanger是一个用于线程间协作的工具类。Exchanger用于进行线�
 - AtomicMarkableReference 原子更新带有标记位的引用类型。
 
 4.原子更新字段类
+
+![原子更新字段类](../img/java_thread/原子更新字段类.jpg)
 
 - AtomicIntegerFieldUpdater 原子更新整型的字段的更新器
 
@@ -667,17 +703,27 @@ Exchanger是一个用于线程间协作的工具类。Exchanger用于进行线�
 
 (八).Executor框架(执行机制)
 
+![Executor框架(执行机制)](../img/java_thread/Executor框架(执行机制).jpg)
+
 从JDK5开始，把工作单元和执行机制分离开来，工作单元包括Runnable和Callable，而执行机制由Executor框架提供。
 
 1.异步计算的结果：FutureTask和Future
 
+![异步计算的结果](../img/java_thread/异步计算的结果.jpg)
+
 2.任务执行
 
+![任务执行](../img/java_thread/任务执行.jpg)
+
 (1).Executor(核心接口)
+
+![Executor核心接口](../img/java_thread/Executor(核心接口).jpg)
 
 Executor的生命周期：创建，提交，开始，完成
 
 (2).ExecutorService接口(继承自Executor)
+
+![ExecutorService接口(继承自Executor)](../img/java_thread/ExecutorService接口(继承自Executor).jpg)
 
 - ExecutorService的生命周期：运行，关闭，已终止
 
@@ -697,6 +743,12 @@ Executor的生命周期：创建，提交，开始，完成
 
 - ExecutorService的创建：
 
+![ExecutorService的创建](../img/java_thread/ExecutorService的创建.jpg)
+
+![ScheduledThreadPoolExecutor](../img/java_thread/ScheduledThreadPoolExecutor.jpg)
+
+![ThreadPoolExecutor](../img/java_thread/ThreadPoolExecutor.jpg)
+
 | 调用 |     分类   |   使用        |
 | :----------|:-----|:-------------| 
 | Executors.newSingleThreadExecutor()|ThreadPoolExecutor |应用场景：适用于需要保证顺序地执行各个任务；并且在任意时间点，不会有多个线程活动的应用场景。|
@@ -707,10 +759,13 @@ Executor的生命周期：创建，提交，开始，完成
 
 3.任务:Runnable接口和Callable接口
 
+![任务](../img/java_thread/任务.jpg)
 
 ****
 
 (九).其他
+
+![其他](../img/java_thread/其他.jpg)
 
 1.jstack
 
