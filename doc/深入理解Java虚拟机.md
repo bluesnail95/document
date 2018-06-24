@@ -1,5 +1,7 @@
 整理自《深入理解Java虚拟机》
 
+![深入理解Java虚拟机(汇总).jpg](https://github.com/bluesnail95/document/blob/master/img/jvm/深入理解Java虚拟机(汇总).jpg)
+
 一:运行时数据区域
 
 Java虚拟机在执行Java程序的过程中会把所管理的内存划分为若干个不同的数据区域。
