@@ -173,48 +173,48 @@ hash,list,set,zset,string（memacached只支持string）。
 Jedis jedis = null;
 try {
 			
-	   jedis = new Jedis("127.0.0.1", 6379, 10000);
+    jedis = new Jedis("127.0.0.1", 6379, 10000);
 			
-	   //1.string
-	   String result1 = jedis.set("string1", "value1");
-	   String result2 = jedis.get("string1");
-	   System.out.println(result1);//OK
-	   System.out.println(result2);//value1
+    //1.string
+    String result1 = jedis.set("string1", "value1");
+    String result2 = jedis.get("string1");
+    System.out.println(result1);//OK
+    System.out.println(result2);//value1
 			
-	   //2.list
-	   long result3 = jedis.lpush("list1", "math","math","score","score","name","xiaoming");
-	   List<String> result4 = jedis.lrange("list1", 0, -1);
-	   System.out.println(result1);//OK
-	   System.out.println(result4);//xiaoming, name, score, score, math, math
+    //2.list
+    long result3 = jedis.lpush("list1", "math","math","score","score","name","xiaoming");
+    List<String> result4 = jedis.lrange("list1", 0, -1);
+    System.out.println(result1);//OK
+    System.out.println(result4);//xiaoming, name, score, score, math, math
 			
-	   //3.hash
-	   jedis.hset("hash1", "subject","math");
-	   jedis.hset("hash1", "score","99");
-	   jedis.hset("hash1", "name","xiaoming");
-	   List<String> result5 = jedis.hmget("hash1", "subject","score","name");
-	   System.out.println(result5);//[math, 99, xiaoming]
+    //3.hash
+    jedis.hset("hash1", "subject","math");
+    jedis.hset("hash1", "score","99");
+    jedis.hset("hash1", "name","xiaoming");
+    List<String> result5 = jedis.hmget("hash1", "subject","score","name");
+    System.out.println(result5);//[math, 99, xiaoming]
 			
-	   //4.set
-	   jedis.sadd("set1", "math","math","english","chinese");
-	   jedis.sadd("set2", "math","chinese","art");
-	   jedis.sinterstore("set3", "set1","set2");
-	   System.out.println(jedis.smembers("set3"));//[math, chinese]
-			
-	   //5.zset
-	   jedis.zadd("zset1", 100, "math");
-	   jedis.zadd("zset1", 200, "chinese");
-	   jedis.zadd("zset1", 300, "english");
-	   Set<String> result6 = jedis.zrangeByScore("zset1", 100, 200);
-	   result6.forEach(string -> {
-		      System.out.print(string+" ");
-	   });//math chinese 
+    //4.set
+    jedis.sadd("set1", "math","math","english","chinese");
+    jedis.sadd("set2", "math","chinese","art");
+    jedis.sinterstore("set3", "set1","set2");
+    System.out.println(jedis.smembers("set3"));//[math, chinese]
+
+    //5.zset
+    jedis.zadd("zset1", 100, "math");
+    jedis.zadd("zset1", 200, "chinese");
+    jedis.zadd("zset1", 300, "english");
+    Set<String> result6 = jedis.zrangeByScore("zset1", 100, 200);
+    result6.forEach(string -> {
+	System.out.print(string+" ");
+    });//math chinese 
 			
 }catch(Exception e) {
-	   e.printStackTrace();
+    e.printStackTrace();
 }finally {
-	   if(jedis != null) {
-		      jedis.close();
-	   }
+    if(jedis != null) {
+	jedis.close();
+    }
 }
 
 ```
@@ -290,9 +290,12 @@ try {
 ## 五.持久化
 
 ### 1.RDB
-(1)概念：将当前线程数据生成快照保存在磁盘中。
 
-(2)方式
+#### (1)概念
+
+将当前线程数据生成快照保存在磁盘中。
+
+#### (2)方式
 
 a.手动触发
 
@@ -302,7 +305,7 @@ b.自动触发
 
 在某些情况下自动触发bgsave命令或是save命令。
 
-(3)RDB的优缺点
+#### (3)RDB的优缺点
 
 a.优点
 
@@ -314,9 +317,11 @@ b.缺点
 
 ### 2.AOF
 
-(1)概念：记录每次的写命令，重启后执行AOF文件中的命令以达到恢复数据的目的。可以用aof_enabled开启aof功能。
+#### (1)概念
 
-(2)特点：
+记录每次的写命令，重启后执行AOF文件中的命令以达到恢复数据的目的。可以用aof_enabled开启aof功能。
+
+#### (2)特点
 
 a.AOF命令以文本协议格式的形式写入内容到aof_buf中，再由aof_buf同步到硬盘中。文本协议格式具有很好的兼容性以及避免了二次处理的开销。而写入到aof_buf中是为了避免直接写入硬盘，以免硬盘的容量决定了追加写入的性能。
 
