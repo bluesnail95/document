@@ -327,6 +327,317 @@ a.AOF命令以文本协议格式的形式写入内容到aof_buf中，再由aof_b
 
 b.aof重写将无效的命令如del去掉，将多个命令合并成一个命令，以达到压缩文件体积，加快Redis加载aof文件的速度。
 
-参考资料：
+## 六.复制
+
+### 1.从节点和主节点之间建立关系有以下的方式:
+
+(1)在配置文件(redis.conf)中加入slaveof {masterofhost} {masterofport}
+
+(2)启动redis-server时执行：redis-server -slaveof {masterofhost} {masterofport}
+
+### 2.主节点和从节点断开和切换：
+
+(1)断开：slaveof no one
+
+(2)切换：执行命令slaveof {masterofhost} {masterofport}
+
+### 3.复制的特点
+
+(1)只能将主节点的数据复制到从节点。
+
+(2)slaveof是异步命令,从节点保存了主节点的信息后返回，而不需要等到完全复制完毕才返回。
+
+(3)可以通过命令info replication查看复制信息。
+
+(4)从节点断开与主节点的复制关系后，会晋升为主节点。
+
+(5)从节点切换主节点之后，会删除从节点当前的所有数据，对新节点数据进行复制。
+
+### 4.Redis的复制关系
+
+(1)一主一从：用于主节点宕机时，从节点提供故障转移支持。
+
+(2)一主多从：用于读写分离，主节点执行写命令，从节点执行读命令，当高并发写时，将写命令的数据复制到从节点就需要消耗比较多的网络带宽。
+
+(3)树状主从：从节点不仅可以复制主节点的数据，还可以作为其他从节点的主节点进行向下复制。可以有效降低主节点的负载和传输给从节点的数据量。
+
+### 5.全量复制和部分复制
+
+全量复制：将主节点的数据一次性发生给从节点。一般用于初次复制场景。
+
+部分复制：仅复制主节点的部分数据给从节点。一般用于处理主从复制中网络闪断等原因造成的数据丢失场景。
+
+从节点执行命令：psync {runId} {offset}。runId是主节点的运行id,offset是从节点已复制的偏移量。主节点响应写命令时，会把写命令发送给从节点，还会将写命令写入复制积压缓冲区。
+
+## 七.Redis的阻塞
+
+利用日志对Redis的异常进行监控。
+
+内部原因：不合理使用API或数据结构（可能由此导致慢查询等）、CPU饱和（Redis是单线程，只会使用单个CPU）、持久化阻塞（fork操作产生阻塞，AOF对硬盘的操作产生阻塞或HugePage写操作阻塞）等。
+
+外在原因：CPU竞争、内存交换、网络问题等。
+
+## 八.Redis的内存
+
+### 1.Redis进程内存消耗
+
+![Redis进程内存消耗.jpg](../img/Redis/Redis进程内存消耗.jpg)
+
+可以通过config set maxmemory value设置最大内存以达到伸缩内存的目的
+
+### 2.Redis内存的回收
+
+(1)删除已过期的键对象。包括惰性删除(查询时判断键对象是否过期，如果过期执行删除操作并返回空)和定时删除。
+
+(2)内存达到maxmemory时执行内存溢出控制策略。内存溢出策略包括noeviction,volatile-lru,allkeys-lru,allkeys-random,volatile-random和volatile-ttl,可以通过config set maxmemory-policy {policy}动态设置。
+
+### 3.内存优化
+
+(1)缩短键和值的长度，使用高效二进制序列化工具。
+
+(2)使用对象共享池优化小整数对象。
+
+(3)避免字符串的追加操作，因为字符串追加会导致内存的预分配以降低内存的分配次数。
+
+(4)ziplist压缩编码的原则是追求时间和空间的平衡，hash,zset,list的内部编码可以是ziplist，可以通过{type}-max-ziplist-value和{type}-max-ziplist-entries进行编码的控制。
+
+(5)intset是set的内部编码，整数集合尽量使用intset编码，
+
+(6)数据优先使用整数，比字符串类型更节省内存。
+
+## 九.Redis Sentinel（哨兵）
+
+### 1.Redis Sentinel是什么？
+
+一个分布式架构，包括Sentinel节点，Redis数据节点和分布在多个物理机的客户端应用。完成主节点不可用时的故障转移处理工作，提供了高可用的解决方案。
+
+### 2.Sentinel节点发现故障转移前的内容：
+
+(1)每个Sentinel节点会对所有的数据节点（包括主节点和从节点）和其他的Sentinel节点进行监控。
+
+(2)当半数以上的节点认为主节点故障不可用，就会选择其中一个Sentinel节点作为领导者进行故障转移处理。
+
+### 3.故障转移处理的步骤如下：
+
+(1)对某一个从节点执行slaveof no one,晋升为主节点。
+
+(2)其他的从节点复制新的主节点命令（slaveof new master）
+。
+(3)旧的主节点恢复后也要复制新的主节点命令（slaveof new master）。
+
+(4)通知应用方新的主节点。
+
+### 4.为什么需要多个Rentinel节点？
+
+由多个Rentinel节点对主节点不可达进行判断，可以防止误判。如果有个别Rentinel节点失效，整个Rentinel集合依然可用。
+
+### 5.Redis Sentinel的搭建
+
+### (1)建立配置文件，逐一开启。（配置文件的写法可以去看《Redis开发与运维》第九章）
+
+开启主节点：
+
+  - redis-server redis-6379.conf
+
+开启从节点：
+  
+  - redis-server redis-6380.conf
+
+  - redis-server redis-6381.conf
+	   
+开启sentinel节点  
+
+  - redis-server redis-sentinel-26379.conf --sentinel
+
+  - redis-server redis-sentinel-26380.conf --sentinel
+		 
+  - redis-server redis-sentinel-26381.conf --sentinel
+		 
+查看主节点的从节点：redis-cli -h 127.0.0.1 -p 6379 info replication
+
+查看从节点的主节点  redis-cli -h 127.0.0.1 -p 6380 info replication
+
+查看sentinel节点监控的主节点 redis-cli -h 127.0.0.1 -p 26379 info sentinel
+
+![redis搭建的配置文件.jpg](../img/Redis/redis搭建的配置文件.jpg)
+
+![redis主从关系.jpg](../img/Redis/redis主从关系.jpg)
+
+![redis的sentinel节点.jpg](../img/Redis/redis的sentinel节点.jpg)
+
+### (2)sentinel配置文件的一些参数
+
+|参数|含义|
+|:----|:----|
+|sentinel monitor <master-name> <ip> <port> <quorum>|sentinel节点要监控名字叫<master-name>,ip地址是<ip>,端口地址是<port>的主节点。<quorum>表示判定主节点不可达需要的票数。|
+|sentinel down-after-milliseconds <master-name> <times>|sentinel节点会向数据节点和其他sentinel节点发送ping命令，如果节点在<times>毫秒时间内没有回复，则认为节点不可达。|
+|sentinel parallel-syncs <master-name> <nums>|一次故障转移后，每次向新节点发起复制操作的从节点个数。|
+|sentinel failover-timeout <master-name> <times>|故障转移的超时时间。|
+|sentinel authpass <master-name> <password>|添加主节点的密码。|
+|sentinel notification-script <master-name> <script-path>|在故障转移期间，如果发生了一些警告级别的事件（如客观下线，主观下线等），就会触发对应路径的脚本，并向脚本发送相应的事件参数。|
+|sentinel client-reconfig-script <master-name> <script-path>|在故障转移结束后，会触发相应路径下的脚本，并把故障转移后的结果参数发送给脚本。|
+
+## 6.Redis Sentinel部署的特点
+
+(1)将Sentinel节点部署在不同的物理机上，因为如果一旦物理机出现故障，那这台物理机上的Sentinel节点都会受到影响。
+
+(2) 部署三个以上且奇数个Sentinel节点，因为领导者选举需要半数加上1个，部署奇数个节点可以节省一个节点。
+
+(3)如果Sentinel节点需要监控同一个业务的所有主节点集合，就使用同一套Sentinel节点监控，如果不是，就用不同的Sentinel节点集合监控不同的业务的主节点。使用同一套Sentinel节点监控可以节约资源，但是一旦出现异常，就会对监控的数据节点造成影响。
+
+### 7.Sentinel节点的操作(进入某个Sentinel节点客户端输入以下操作)
+
+|操作|含义|
+|:----|:----|
+|sentinel master|查看所有的监控的主节点的信息。|
+|sentinel master <master-name>|查看指定的监控的主节点的信息。|
+|sentinel get-master-addr-by-name <master-name>|根据主节点名称查看主节点的IP地址和端口|
+|sentinel slaves <master-name>|查看主节点的从节点信息|
+|sentinel sentinels <master-name>|查看主节点的Sentinel节点信息（不包括当前节点）|
+|sentinel remove <master-name>|取消当前节点对指定主节点的监控。|
+
+### 8.根据Sentinel节点连接主节点
+
+遍历Sentinel节点集合获得一个可用的Sentinel节点，再利用sentinel get-master-addr-by-name获得主节点的IP地址和端口号。
+
+```
+/**
+ * 使用Sentinel节点连接主节点
+ * @author liuffei
+ * @date 2018年7月21日
+ * @description
+ */
+public class SentinelTest {
+
+    public static void main(String[] args) {
+		
+        org.slf4j.Logger logger = LoggerFactory.getLogger(SentinelTest.class);
+		
+	Set<String> sentinels = new HashSet<String>();
+	sentinels.add("127.0.0.1:26379");
+	sentinels.add("127.0.0.1:26380");
+	sentinels.add("127.0.0.1:26381");
+	JedisSentinelPool pool = new JedisSentinelPool("mymaster",sentinels);
+	Jedis jedis = null;
+	try {
+		jedis = pool.getResource();
+		String result = jedis.get("hello");
+		System.out.println(result);
+	}catch(Exception e) {
+		logger.error(e.getMessage());
+	}finally {
+		if(null != jedis) {
+			jedis.close();
+		}
+	}
+    }
+}
+
+```
+### 9.Sentinel的内部原理
+
+#### (1)Sentinel需要三个定时任务来保证对节点不可达的判断：
+
+ - 每隔10秒，每个Sentinel节点向数据节点（主节点和从节点）发送info replication命令获取最新的主从关系。
+ 
+ - 每隔2秒，每个Sentinel节点需要向某个频道发送自己对主节点是否可达的判断和自身节点的信息，以发现新的Sentinel节点和Sentinel节点之间可以交换主节点的状态。
+ 
+ - 每隔1秒，每个Sentinel节点需要向其它节点（包括主节点，从节点，Sentinel节点）发送ping命令来确认这些节点是否可达。
+
+#### (2)主观下线和客观下线
+
+ - 主观下线：Sentinel节点向某个节点发出ping命令后，该节点在down-after-milliseconds之后没有进行回复,Sentinel会对该节点做失败判定，这个行为成为主观下线。
+ 
+ - 客观下线：如果主观下线的是主节点，那Sentinel节点就会通过is-master-down-by-addr向其他Sentinel节点询问主节点的状态，当Sentinel认为主节点失败的个数超过<quorum>的数量，就认为客观下线，需要进行故障转移。
+
+#### （3）领导者的选举
+
+只需要一个Sentinel节点就能完成故障转移。当一个Sentinel节点完成客观下线之后，会询问其他节点是否同意自己成为领导者，如果获得票数大于等于max{quorum,num(sentinels/2+1)}，就会成为领导者，
+
+## 十.集群
+
+集群和哨兵都可以保障高可用，不同的是哨兵是每台Redis服务器存储相同的数据，而集群是将数据分区后，每个节点操作一个分区的数据。
+
+### 1.数据分区
+
+分布式数据库需要把数据集划分到多个节点上，常用的分区规则有：顺序分区和哈希分区。Redis采用哈希分区，哈希分区有节点取余分区，一致性哈希分区和虚拟槽分区等等。Redis Cluster采用虚拟槽分区。
+
+虚拟槽分区：使用分散度良好的哈希函数把所有数据映射到一个固定范围的整数集合中，整数定义为槽。槽是集群内数据管理和迁移的基本单位。采用大范围槽的主要目的是为了方便拆分和集群拓展。Redis Cluster采用虚拟槽分区，所有的键根据哈希函数映射到0-16383整数槽内，计算公式：slot=CRC16(key)&16383。每个节点负责维护一部分槽以及槽所映射的键值数据。
+
+### 2.集群的搭建
+
+#### (1)准备节点
+
+需要准备6台及以上的Redis服务器才能保证完整的高可用。需要设置cluster-enabled yes。
+
+#### (2)节点握手
+
+概念：指一批运行在集群模式下的节点通过Gossip协议通信，达到感知对方的过程。由客户端发起命令：cluster meet {ip} {port}
+
+#### (3)分配槽
+
+只有当节点分配了槽，才能响应和这些槽关联的键命令。客户端执行cluster replicate {nodeId}可以让一个节点变成子节点。
+
+### 3.Gossip协议
+
+工作原理：节点彼此不断通信交换消息，一段时间后所有节点都会知道集群完整的信息，这种方式类似留言传播。
+
+Gossip的消息包括以下：
+
+(1)meet消息：向集群中加入新的节点 cluster meet {ip} {port}
+
+(2)ping消息：用于集群内交换消息。
+
+(3)pong消息: 响应消息。
+
+(4)fail消息：用于在集群内广播下线消息。
+
+### 4.集群的伸缩和扩容
+
+(1)扩容:准备新节点->加入集群->分配槽和数据
+
+(2)收缩:下线迁移槽->遗忘节点
+
+## 十一.缓存
+
+### 1.使用缓存的好处以及带来的问题
+
+(1)好处：Redis将数据存储在内存中，可以加快写入和读取的速度，同时还能在缓存层做一些复杂的操作和计算。减少了向后端的访问，降低了对后端（存储层）的负载。
+
+(2)问题：缓存层和存储层的数据存在一致性问题。增加了代码维护和运维成本。
+
+### 2.缓存的更新策略
+
+(1)算法剔除：当缓存的使用量超过最大值时，利用一些算法策略，删除一部分缓存键值对象。
+
+(2)过期删除：给缓存对象设置过期时间，这会导致存储层和缓存层的数据存在不一致，可用于实时性不高的场景中。
+
+(3)主动更新：真实数据更新后就立马更新存储层的数据。可用于实时性要求高的场景。
+
+### 3.缓存全部数据和部分数据的对比：
+
+(1)缓存全部数据可以使用在比较多的场景下，但是对内存的压力也比较大，代码维护压力小。
+
+(2)缓存部分数据的适用场景比较少，对内存压力小，但是一旦需要在缓存中新加字段，就需要修改代码。
+
+### 4.缓存穿透
+
+指查询了存储层和缓存层都不存在的数据，存储层和缓存层都不会命中。
+
+问题：如果不把空值存储在缓存层就会导致频繁访问存储层，增加了数据库的访问压力。如果把空值存储在内存中，就会在缓存层维护一些值为空的键。增大了内存的存储压力。
+
+### 5.缓存“无底洞”
+
+指添加新的节点机器没有提高性能，反而导致性能下降。因为将数据分散存储在更多的机器节点上了，批量操作需要从不同的节点上获取。
+
+### 6.缓存雪崩
+
+指缓存层不能提供服务之后，会有大量的请求涌入存储层，可能会导致存储层宕机。
+
+### 7.热点Key失效
+
+热点Key会有大量的请求，短时间内不能恢复。
+
+## 参考资料：
 
 《Redis开发与运维》
