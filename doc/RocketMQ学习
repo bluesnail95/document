@@ -1,0 +1,26 @@
+消息中间件有很多，比如RabbitMQ,RocketMQ之类的，比较了RabbitMQ和RocketMQ的书籍之后，自己选择了RocketMQ。
+
+一：RocketMQ的安装
+
+http://rocketmq.apache.org dowloading releases 
+
+二：RocketMQ的概念
+
+1.RocketMQ的角色
+
+(1)Producer：
+
+(2)Consumer:
+
+(3)Broker:
+
+(4)NameServer:
+
+2.RocketMQ的主题和队列
+
+(1)Topic
+
+(2)Message Queue
+
+参考资料：
+《RocketMQ实战与原理解析》
