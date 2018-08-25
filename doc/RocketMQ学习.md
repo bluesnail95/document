@@ -1,32 +1,32 @@
 消息中间件有很多，比如RabbitMQ,RocketMQ之类的，比较了RabbitMQ和RocketMQ的书籍之后，自己选择了RocketMQ。
 
-一：RocketMQ的安装
+### 一：RocketMQ的安装
 
-http://rocketmq.apache.org dowloading releases 
+http://rocketmq.apache.org/dowloading/releases 
 
-二：RocketMQ的概念
+### 二：RocketMQ的概念
 
-1.RocketMQ的角色
+#### 1.RocketMQ的角色
 
-(1)Producer：生产者
+|角色名称|作用|
+|-------|----|
+|Producer|生产者|
+|Consumer|消费者|
+|Broker|存储，传输消息的中介|
+|NameServer|协调Broker的管理机构|
 
-(2)Consumer: 消费者
+#### 2.RocketMQ的主题和队列
 
-(3)Broker: 存储，传输消息的中介
+|名称|作用|
+|-------|----|
+|Topic|不同的消息类型以不同的Topic名称区分。|
+|Message Queue|一个Topic可以设置一个或多个Message Queue发送。|
 
-(4)NameServer: 协调Broker的管理机构
+### 三：RocketMQ双主从的配置
 
-2.RocketMQ的主题和队列
+#### 1.修改bin/runserver.sh和bin/runbroker.sh默认配置的内存:
 
-(1)Topic：不同的消息类型以不同的Topic名称区分。
-
-(2)Message Queue：一个Topic可以设置一个或多个Message Queue发送。
-
-三：RocketMQ双主从的配置
-
-1.修改bin/runserver.sh和bin/runbroker.sh默认配置的内存:
-
-(1)bin/runserver.sh
+- bin/runserver.sh
 
 修改前最大堆和最小堆配置的是4G，年轻代是2G
 
@@ -34,7 +34,7 @@ http://rocketmq.apache.org dowloading releases
 
 修改后：JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn128m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m"
 
-(2)bin/runbroker.sh
+- bin/runbroker.sh
 
 修改前：JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"
 
@@ -46,15 +46,15 @@ https://blog.csdn.net/u012246342/article/details/80903129
 
 https://www.jianshu.com/p/ca3a87bed2c2
 
-2.开启namesrv
+#### 2.开启namesrv
 
 启动命令：nohup sh bin/mqnamesrv & 
 
-3.配置broker的properties文件
+#### 3.配置broker的properties文件（用自己的两台机器139.199.210.171和193.112.47.238）
 
-(1)在139.199.210.171上的配置(conf/2m-2s-sync下的properties文件)
+(1)在139.199.210.171上的配置(rocketmq是我的文件目录，配置文件名称可以自定义)
 
-a.broker-a.properties:作为broker-a的主节点
+a.rocketmq/conf/2m-2s-sync/broker-a.properties:作为broker-a主节点的配置文件
 
 ```
 brokerClusterName=cluster1
@@ -69,9 +69,24 @@ storePathRootDir=/usr/download/rocketmq/store-a
 namesrvAddr=139.199.210.171:9876;193.112.47.238:9876
 ```
 
-(2)在193.112.47.238上的配置(conf/2m-2s-sync下的properties文件)
+b.rocketmq/conf/2m-2s-sync/broker-b-s.properties:作为broker-b从节点的配置文件
 
-a.broker-b.properties:作为broker-b的主节点
+```
+namesrvAddr=139.199.210.171:9876;193.112.47.238:9876
+brokerClusterName=cluster1
+brokerName=broker-b
+brokerId=1
+deleteWhen=04
+fileReservedTime=48
+brokerRole=SLAVE
+flushDiskType=ASYNC_FLUSH
+listenPort=11011
+storePathRootDir=/usr/download/rocketmq/store-b
+```
+
+(2)在193.112.47.238上的配置
+
+a.rocketmq/conf/2m-2s-sync/broker-b.properties:作为broker-b主节点的配置文件
 
 ```
 namesrvAddr=139.199.210.171:9876;193.112.47.238:9876
@@ -86,7 +101,7 @@ listenPort=10911
 storePathRootDir=/usr/download/rocketmq/store-b
 ```
 
-b.broker-b-s.properties:作为broker-a的从节点
+b.rocketmq/conf/2m-2s-sync/broker-b-s.properties:作为broker-a从节点的配置文件
 
 ```
 namesrvAddr=139.199.210.171:9876;193.112.47.238:9876
@@ -99,20 +114,31 @@ brokerRole=SLAVE
 flushDiskType=ASYNC_FLUSH
 listenrPort=11011
 storePathRootDir=/usr/download/rocketmq/store-a
-
 ```
 
-4.启动broker
+#### 4.启动broker
 
-5.关闭broker和namesrv
+进入到rocketmq的目录文件夹，执行：nohup sh bin/mqbroker -c conf/2m-2s-sync/xxx.properties &
 
-6.rocketMQ console的可视化监控
+根据3的配置 broker-a master --> broker-a slave --> broker-b master --> broker-b slave
 
+#### 5.关闭broker和namesrv
 
+sh bin/shutdown broker
+
+sh bin/shutdown namesrv
+
+#### 6.rocketMQ console的可视化监控
+
+参考：http://www.cnblogs.com/buyige/p/9437054.html
+
+#### 注意需要在配置文件application.properties文件中修改namesrvAddr的地址。
 
 
 
 参考资料：
+
 《RocketMQ实战与原理解析》
+
 官方文档：http://rocketmq.apache.org
 
