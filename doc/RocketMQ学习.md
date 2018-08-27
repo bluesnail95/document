@@ -134,7 +134,24 @@ sh bin/shutdown namesrv
 
 #### 注意需要在配置文件application.properties文件中修改namesrvAddr的地址。
 
+四.rockctmq常用的命令
 
+### 进入rocketmq安装目录，运行实例：sh bin/mqadmin updateTopic -b 139.199.210.171:10911 -n 139.199.210.171:9876 -t topic1
+
+|命令|解释|
+|----|---|
+|updateTopic|创建或是修改一个Topic|
+|deleteTopic|删除Topic|
+|updateSubGroup|创建/修改订阅组|
+|deleteSubGroup|删除订阅组|
+|updateBrokerConfig|更新broker配置|
+|updateTopicPerm|更新Topic的读写权限|
+|TopicRoute|查询Topic的路由信息|
+|TopicList|查询Topic列表信息|
+|TopicStats|查询Topic统计信息|
+|printMsg|根据时间查询消息|
+|queryMsgById|根据消息ID查询消息|
+|clusterList|查看集群消息|
 
 参考资料：
 
