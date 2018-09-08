@@ -153,6 +153,21 @@ sh bin/mqshutdown namesrv
 |queryMsgById|根据消息ID查询消息|
 |clusterList|查看集群消息|
 
+五.消费者和消费模式
+
+1.消费者
+
+(1)push：Server接到消息之后主动将消息推送给客户端，实时性高。
+
+(2)pull：客户端定时从服务端拉取消息，定时时间太长不能及时拉取消息，时间太短拉取消息会比较频繁。
+
+2.消费模式
+
+(1)clustering：每个cutsomer订阅topic的一部分内容，一个CustomerGroup中所有customer订阅的内容是topic内容的总和。
+
+(2)broadcasting：每个customer订阅的都是topic的全部内容。
+
+
 参考资料：
 
 《RocketMQ实战与原理解析》
