@@ -124,9 +124,9 @@ storePathRootDir=/usr/download/rocketmq/store-a
 
 #### 5.关闭broker和namesrv
 
-sh bin/shutdown broker
+sh bin/mqshutdown broker
 
-sh bin/shutdown namesrv
+sh bin/mqshutdown namesrv
 
 #### 6.rocketMQ console的可视化监控
 
