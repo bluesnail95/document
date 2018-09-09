@@ -1,4 +1,3 @@
-消息中间件有很多，比如RabbitMQ,RocketMQ之类的，比较了RabbitMQ和RocketMQ的书籍之后，自己选择了RocketMQ。
 
 ### 一：RocketMQ的安装
 
@@ -38,7 +37,7 @@ http://rocketmq.apache.org/dowloading/releases
 
 修改前：JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"
 
-修改后：JAVA_OPT="${JAVA_OPT} -server -Xms128m -Xmx256m -Xmn256m"
+修改后：JAVA_OPT="${JAVA_OPT} -server -Xms256m -Xmx256m -Xmn128m"
 
 参考：
 
@@ -153,17 +152,49 @@ sh bin/mqshutdown namesrv
 |queryMsgById|根据消息ID查询消息|
 |clusterList|查看集群消息|
 
-五.消费者和消费模式
+五.实例
+
+```
+//1.消费者
+DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("group1");
+//2.设置namesrv的地址
+consumer.setNamesrvAddr("139.199.210.171:9876");
+//3.消费者开始读取的偏移量
+consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
+//4.设置消息模式
+consumer.setMessageModel(MessageModel.BROADCASTING);
+try {
+     consumer.subscribe("topic1","*");
+     consumer.registerMessageListener(new MessageListenerConcurrently() {
+         @Override
+         public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> list, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+             System.out.println(Thread.currentThread().getName() + "Receive New Message:" + list + "%n");
+             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+         }
+     });
+     consumer.start();
+} catch (MQClientException e) {
+     e.printStackTrace();
+}
+```
 
 1.消费者
 
-(1)push：Server接到消息之后主动将消息推送给客户端，实时性高。
+(1)DefaultMQPushConsumer
 
-(2)pull：客户端定时从服务端拉取消息，定时时间太长不能及时拉取消息，时间太短拉取消息会比较频繁。
+- 优点:server接到消息之后主动将消息推送给客户端，实时性高。
+
+- 缺点:增大了server的工作量，每个client的处理能力不同。
+
+(2)DefaultMQPullConsumer：客户端定时从服务端拉取消息，定时时间太长不能及时拉取消息，时间太短拉取消息会比较频繁。
+
+- 优点:client主动向server拉取消息
+
+- 缺点:client拉取消息的间隔太长会导致消息不能及时处理，间隔太短会导致浪费连接资源。
 
 2.消费模式
 
-(1)clustering：每个cutsomer订阅topic的一部分内容，一个CustomerGroup中所有customer订阅的内容是topic内容的总和。
+(1)clustering：一个CustomerGroup下有多个每个cutsomer订阅topic的一部分内容，一个CustomerGroup中所有customer订阅的内容是topic内容的总和。
 
 (2)broadcasting：每个customer订阅的都是topic的全部内容。
 
