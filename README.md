@@ -8,3 +8,9 @@
 [深入理解Java虚拟机](doc/深入理解Java虚拟机.md)
 
 [ZooKeeper学习](doc/ZooKeeper学习.md)
+
+[Redis学习](doc/Redis学习.md)
+
+[RocketMQ学习](doc/RocketMQ学习.md)
+
+[Maven学习](doc/Maven学习.md)
