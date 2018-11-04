@@ -155,6 +155,15 @@ find . -name '*.rdb' -type f -print -exec rm -rf {} \;
 find . -name '*.aof' -type f -print -exec rm -rf {} \;
 ```
 
+### 4.设置集群的密码
+
+```
+#对6380,6381,6382,6383,6384,6385进行如下操作
+$config set masterauth {password}
+$config set requirepass {password}
+$config rewrite
+```
+
 参考资料：
 
 https://blog.csdn.net/u013063153/article/details/71191138
