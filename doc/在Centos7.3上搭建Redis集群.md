@@ -2,6 +2,8 @@
 
 下载地址：http://download.redis.io/releases/redis-5.0.0.tar.gz
 
+### 2.手动构建Redis集群
+
 输入的命令如下:
 
 ```
@@ -131,6 +133,30 @@ ef7eaafc183d473ca6bac90758a8b951b5e0158f 127.0.0.1:6380@16380 master - 0 1541238
 
 ```
 
+### 3.利用redis-cli构建Redis集群
+
+```
+#在创建集群前需要各个节点建立联系(cluster meet {ip} {port})
+$redis-cli --cluster create 127.0.0.1:6380 127.0.0.1:6381 127.0.0.1:6382 127.0.0.1:6383 127.0.0.1:6384 127.0.0.1:6385 --cluster-replicas 1
+```
+
+搭建过程出现以下错误：
+
+```
+[ERR] Node 127.0.0.1:6380 is not empty. Either the nodealready knows other nodes (check with CLUSTER NODES) or contains some key in database 0.
+```
+
+解决方案：https://blog.csdn.net/xiaoliuliu2050/article/details/72898828  
+
+删除rdb,aof文件命令：
+
+```
+find . -name '*.rdb' -type f -print -exec rm -rf {} \;
+find . -name '*.aof' -type f -print -exec rm -rf {} \;
+```
+
 参考资料：
+
+https://blog.csdn.net/u013063153/article/details/71191138
 
 《Redis开发与运维》
