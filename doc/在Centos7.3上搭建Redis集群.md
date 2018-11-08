@@ -155,6 +155,16 @@ find . -name '*.rdb' -type f -print -exec rm -rf {} \;
 find . -name '*.aof' -type f -print -exec rm -rf {} \;
 ```
 
+如果在删除cluster-config-file设置的文件，删除备份文件，flushdb之后都没有用，可以采取以下措施：
+```
+127.0.0.1:6379>cluster reset
+127.0.0.1:6380>cluster reset
+127.0.0.1:6381>cluster reset
+127.0.0.1:6382>cluster reset
+127.0.0.1:6383>cluster reset
+127.0.0.1:6384>cluster reset
+```
+
 ### 4.设置集群的密码
 
 ```
@@ -162,7 +172,57 @@ find . -name '*.aof' -type f -print -exec rm -rf {} \;
 $config set masterauth {password}
 $config set requirepass {password}
 $config rewrite
+
+#将设置的密码清空(也就是不设置密码)
+$config set masterauth ""
+$config set requirepass ""
 ```
+
+### 5.Jedis连接redis集群
+
+用的是Jedis2.9.0版本
+
+```
+@Test
+public void testSetString() {
+    JedisPoolConfig config = new JedisPoolConfig();
+    config.setMaxTotal(10);
+    config.setMaxIdle(5);
+    config.setMaxWaitMillis(3000);
+    config.setTestOnBorrow(true);
+    config.setTestOnReturn(true);
+
+    Set<HostAndPort> set = new HashSet<HostAndPort>();
+    set.add(new HostAndPort("139.199.210.171",6380));
+    set.add(new HostAndPort("139.199.210.171",6381));
+    set.add(new HostAndPort("139.199.210.171",6382));
+    set.add(new HostAndPort("139.199.210.171",6383));
+    set.add(new HostAndPort("139.199.210.171",6384));
+    set.add(new HostAndPort("139.199.210.171",6385));
+
+    JedisCluster cluster = new JedisCluster(set,15000,10000,10,"xxxx",config);
+    cluster.setnx("hello","tomorrow will be better");
+    String result = cluster.get("hello");
+    System.out.println(result);
+    try {
+        cluster.close();
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+遇到的问题：
+
+(1)Could not get a resource from the pool
+
+解决方案：要设置成bind 139.199.210.171(设置成公网IP）
+
+参考：https://www.cnblogs.com/webyyq/p/8934289.html
+
+(2)JedisCluster进行连接的时候需要返回资源，进行关闭close()。
+
+(3)在没有设置密码的时候，要设置protected-mode为no。
 
 参考资料：
 
